@@ -54,6 +54,7 @@ Rx2=(K(nb+1,nb)*u(nb-1))+Forca(nb+1);
 
 j=1;
 for i = 1:(nb-1)
+    pause
     KF(i,i)=Ks(i+1);
     KF(i+1,i+1)=Ks(i+1);
     KF(i,i+1)=-Ks(i+1);
