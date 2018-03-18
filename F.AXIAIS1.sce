@@ -8,7 +8,7 @@ Coord=[0, 1;0.5, 0;0.8, 0;1.1, 1]; //O número após a coordenada X indica a exi
 
 Mat=[1,25000000,0.04 ; 2,200000000,0.0025];
 
-Bar=[1,2,1;2,3,2;3,4,1];
+Bar=[1,2,1;2,3,2;3,4,1]; //Nós abrangidos e material *EM ORDEM*
 
 Forca=[0;-30;70;0]
 
@@ -69,9 +69,8 @@ end
 tmpF(Sub)=[];
 
 u2=linsolve(tmp,tmpF);
-u([Sub2])=u2;
+u([Sub2])=u2*-1;
 u([Sub])=0;
-
 
 //
 // RESOLVENDO REAÇÕES DE APOIO
@@ -82,6 +81,25 @@ for i=1:j
 end
 
 //
+//RESOLVENDO ESFORÇOS INTERNOS
+//
+
+c=1;
+for i=1:nb
+    if (Coord(Bar(i,1),2)==1 & Coord(Bar(i,2),2)==1)
+        FBar(i)=0;
+    else if (Coord(Bar(i,1),2)==1|Coord(Bar(i,2),2)==1)
+        FBar(i)=abs(Rx(c));
+        c=c+1;
+    else
+        FBar(i)=abs((Ks(i)*u(i))-(Ks(i)*u(i+1)));
+    end
+end
+end
+
+//TESTE
+
+//
 //APRESENTANDO RESULTADOS
 // 
 
@@ -90,3 +108,5 @@ disp(u)
 for i=1:j
     mprintf("\n Forças de Reação no Nó %i: %g \n",Sub(i),Rx(i))
 end
+mprintf("Esforços internos em ordem crescente: \n")
+disp(FBar)
