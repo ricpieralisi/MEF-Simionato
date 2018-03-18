@@ -4,7 +4,7 @@
 
 //DADOS
 
-Coord=[0;0.5;0.8;1.1];
+Coord=[0, 1;0.5, 0;0.8, 0;1.1, 1]; //O número após a coordenada X indica a existência ou não de apoio
 
 Mat=[1,25000000,0.04 ; 2,200000000,0.0025];
 
@@ -15,7 +15,7 @@ Forca=[0;-30;70;0]
 //CALCULANDO Ks
 
 for i=1:(length(Bar)/3)
-    Ks(i)=(Mat(Bar(i,3),2).*Mat(Bar(i,3),3))/(abs(Coord(Bar(i,1))-Coord(Bar(i,2))));
+    Ks(i)=(Mat(Bar(i,3),2).*Mat(Bar(i,3),3))/(abs(Coord(Bar(i,1),1)-Coord(Bar(i,2),1)));
 end
 
 //
@@ -23,6 +23,7 @@ end
 //
 tmp=size(Bar);
 nb=tmp(1);
+clear tmp;
 K=zeros(nb+1,nb+1);
 K(1,1)=Ks(1);
 K(nb+1,nb+1)=Ks(nb);
@@ -38,36 +39,54 @@ end
 // RESOLVENDO O SISTEMA LINEAR DE DESLOCAMENTO
 //
 
-tmp=K(2:nb,2:nb);
-u=linsolve(tmp,Forca(2:nb));
+tmp=K;
+tmp2=K;
+j=0;
+j2=0;
+for i=1:(nb+1)
+    if Coord(i,2)==1
+        j=j+1;
+        Sub(j)=i;
+    else
+        j2=j2+1;
+        Sub2(j2)=i;
+    end
+end
+x=0;
+tmpF=Forca;
+
+while(j2>=1)
+    tmp2(Sub2(j2),:)=[];
+    j2=j2-1;
+end
+
+for i=1:j
+    tmp((Sub(i)-x),:)=[];
+    tmp(:,(Sub(i)-x))=[];
+    x=x+1;
+end
+
+tmpF(Sub)=[];
+
+u2=linsolve(tmp,tmpF);
+u([Sub2])=u2;
+u([Sub])=0;
+
 
 //
 // RESOLVENDO REAÇÕES DE APOIO
 //
 
-Rx1=(K(1,2)*u(1))+Forca(1);
-Rx2=(K(nb+1,nb)*u(nb-1))+Forca(nb+1);
-
-//
-//RESOLVENDO AS FORÇAS NOS NÓS 
-//
-
-KF(1,1)=Ks(2);
-KF(2,2)=Ks(2);
-KF(1,2)=-Ks(2);
-KF(2,1)=-Ks(2);
-FN(1)=KF(1,1).*u(1)+KF(1,2).*u(2);
-FN(2)=KF(2,1).*u(1)+KF(2,2).*u(2);
+for i=1:j
+    Rx(i)=(tmp2(i,:)*u)+Forca(Sub(i));
+end
 
 //
 //APRESENTANDO RESULTADOS
 // 
 
-mprintf("Deslocamentos em ordem crescente de nós: \n 0")
+mprintf("Deslocamentos em ordem crescente de nós: \n")
 disp(u)
-mprintf("0 \n")
-mprintf("Forças de reação no Nó 1: %g \n",Rx1)
-for i=1:nb-1
-    mprintf("Forças no Nó %i: %g \n",i+1,FN(i))
+for i=1:j
+    mprintf("\n Forças de Reação no Nó %i: %g \n",Sub(i),Rx(i))
 end
-mprintf("Forças de reação no Nó %i: %g \n",nb+1,Rx2)
